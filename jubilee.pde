@@ -1,4 +1,4 @@
-#include "LPD8806/LPD8806.h"
+#include "LPD8806.h"
 #include "SPI.h"
 #include <avr/sleep.h>
 #include "carrot.h"
@@ -18,7 +18,7 @@ int upColorButtonCycles = 0;
 
 int CYCLES_DEBOUNCE = 2; //check the button for X ticks to see if it is bouncing
 int MAX_COLORS = 8;
-int MAX_MODES = 7;
+int MAX_MODES = 9;
 int MAX_STRIPES = 5;
 
 unsigned long tick = 0;
@@ -112,20 +112,34 @@ void handleStrip() {
       }
       break;
     case 2:
-      if(tick % 15 == 0) {
+      if(tick % 50 == 0) {
         c = GetColor(color%MAX_COLORS);
         for(i=0; i<strip.numPixels(); i++) {
           strip.setPixelColor(i, c);
         }
       }
-      if(tick % 15 == 1) {
+      if(tick % 50 == 25) {
         c = strip.Color(0,0,0);
         for(i=0; i<strip.numPixels(); i++) {
           strip.setPixelColor(i, c);
         }
       }
       break;
-    case 3: //chasers
+      case 3:  //strobe 2 color
+      if(tick % 30 == 0) {
+        c = GetColor(color%MAX_COLORS);
+        for(i=0; i<strip.numPixels(); i++) {
+          strip.setPixelColor(i, c);
+        }
+      }
+      if(tick % 30 == 15) {
+        c = GetColor(color%MAX_COLORS+2);
+        for(i=0; i<strip.numPixels(); i++) {
+          strip.setPixelColor(i, c);
+        }
+      }
+      break; 
+    case 4: //chasers
       d = (color / MAX_COLORS) % MAX_STRIPES + 1; //chaser
       c = GetColor(color % MAX_COLORS);       //color
       j = tick % (strip.numPixels()/d);
@@ -138,7 +152,7 @@ void handleStrip() {
         }
       }
       break;
-    case 4: //chasers + statics
+    case 5: //chasers + statics
       d = (color / MAX_COLORS) % MAX_STRIPES + 1; //chaser
       c = GetColor(color % MAX_COLORS);       //color
       j = tick % (strip.numPixels()/d);
@@ -152,13 +166,28 @@ void handleStrip() {
         }
       }
       break;
-    case 5: //fuckin' rainbows
+    case 6: //fuckin' rainbows
       j = tick % 384;
       for(i=0; i < strip.numPixels(); i++) {
         strip.setPixelColor(i, Wheel(((i * 384 / strip.numPixels() * (color%MAX_COLORS)) + j) % 384));
       }
       break;
-    case 6: //carrot POV
+    case 7:  //rainbow chaser (3 pixel chaser)
+      d = (color / MAX_COLORS) % MAX_STRIPES + 1; //chaser
+      c = tick % 384;       
+      j = tick % (strip.numPixels()/d);
+      for(i=0; i < strip.numPixels(); i++) {
+        if(i % (strip.numPixels()/d) == c) {
+          strip.setPixelColor(i, Wheel(((i * 384 / strip.numPixels() * (color%MAX_COLORS)) + c) % 384));        //first pixel
+          strip.setPixelColor(i + 1, Wheel(((i * 384 / strip.numPixels() * (color%MAX_COLORS)) + c) % 384));    //second pixel
+          strip.setPixelColor(i + 2, Wheel(((i * 384 / strip.numPixels() * (color%MAX_COLORS)) + c) % 384));    //third pixel
+        }
+        else {
+          strip.setPixelColor(i, strip.Color(0,0,0));
+        }
+      }
+      break;
+    case 8: //carrot POV
       j = tick % 158;
       d = carrot[j];
                                //green                     //orange
