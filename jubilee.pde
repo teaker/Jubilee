@@ -1,7 +1,8 @@
 #include "LPD8806.h"
 #include "SPI.h"
 #include <avr/sleep.h>
-#include "carrot.h"
+#include "heart.h"
+#include "forwardarrow.h"
 
 //since data is on 11 and clock is on 13, we can use hardware SPI
 LPD8806 strip = LPD8806(96);
@@ -17,8 +18,8 @@ int upColorButtonState = HIGH;
 int upColorButtonCycles = 0;
 
 int CYCLES_DEBOUNCE = 2; //check the button for X ticks to see if it is bouncing
-int MAX_COLORS = 8;
-int MAX_MODES = 9;
+int MAX_COLORS = 18;
+int MAX_MODES = 10;
 int MAX_STRIPES = 5;
 
 unsigned long tick = 0;
@@ -26,7 +27,7 @@ unsigned long tick = 0;
 int mode = 1;
 int color = 1;
 
-uint16_t i, j, x, y ;
+uint16_t i, j, x, y;
 uint32_t c, d;
 
 // Set the first variable to the NUMBER of pixels. 32 = 32 pixels in a row
@@ -187,11 +188,27 @@ void handleStrip() {
         }
       }
       break;
-    case 8: //carrot POV
-      j = tick % 158;
-      d = carrot[j];
+    case 8: //heart POV
+      j = tick % 61;
+      d = heart[j];
                                //green                     //orange
-      c = (j < 30)?GetColor((color+2)%MAX_COLORS):GetColor((color+3)%MAX_COLORS);
+      c = (j < 14)?GetColor((color+2)%MAX_COLORS):GetColor((color+3)%MAX_COLORS);
+      for(i=0;i<32;i++) {
+        //adding 32 to the index makes it appear on the side opposite the controller
+        if(d & 0x00000001) {
+          strip.setPixelColor(i+32, c);
+        }
+        else {
+          strip.setPixelColor(i+32, strip.Color(0,0,0));
+        }
+        d >>= 1;
+      }
+      break;
+          case 9: //forwardarrow POV
+      j = tick % 61;
+      d = forwardarrow[j];
+                               //green                     //orange
+      c = GetColor(color % MAX_COLORS);
       for(i=0;i<32;i++) {
         //adding 32 to the index makes it appear on the side opposite the controller
         if(d & 0x00000001) {
@@ -391,21 +408,41 @@ uint32_t GetColor(int c)
 {
   switch(c) {
     case 0:
-      return strip.Color(127,0,0);
+      return strip.Color(127,0,0);  //red
     case 1:
-      return strip.Color(0,0,127);
+      return strip.Color(127,0,60);  
     case 2:
-      return strip.Color(0,127,0);
+      return strip.Color(127,0,127); 
     case 3:
-      return strip.Color(127,31,0);
+      return strip.Color(127,60,0);
     case 4:
       return strip.Color(127,127,0);
     case 5:
-      return strip.Color(0,127,127);
+      return strip.Color(127,127,60);
     case 6:
-      return strip.Color(127,0,127);
+      return strip.Color(60,127,0);
     case 7:
-      return strip.Color(127,127,127);
+      return strip.Color(60,127,127);
+    case 8:
+      return strip.Color(60,60,127);
+    case 9:
+      return strip.Color(60,60,60);
+    case 10:
+      return strip.Color(60,60,0);
+    case 11:
+      return strip.Color(0,0,127);  //blue
+    case 12:
+      return strip.Color(0,60,127);
+    case 13:
+      return strip.Color(0,127,127);
+    case 14:
+      return strip.Color(0,127,0);  //green
+    case 15:
+      return strip.Color(127,30,10);
+    case 16:
+      return strip.Color(25,80,100);
+    case 17:
+      return strip.Color(127,127,127);  //White
     default:
       return strip.Color(0,0,0);
   }
